@@ -9,10 +9,10 @@ import sys
 import pcl_ros
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2, PointCloud
-from sensor_msgs.point_cloud2 import read_points # change code manually at do_transform_cloud from read_cloud to read_points TODO DONE
 from visualization_msgs.msg import Marker, MarkerArray
 import tf
-from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud # sudo apt-get install python-tf2-sensor-msgs
+from do_trans import do_transform_cloud # sudo apt-get install python-tf2-sensor-msgs
+from sens import read_points
 from geometry_msgs.msg import TransformStamped
 listener = tf.TransformListener()
 marker_publisher = None
