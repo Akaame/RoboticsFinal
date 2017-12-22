@@ -23,6 +23,8 @@ rosrun rviz rviz
 
 ### To run localization:
 
+cp -r gazebo/models/colorselectingplane ~/.gazebo/models
+
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
 roslaunch localization localize.launch
