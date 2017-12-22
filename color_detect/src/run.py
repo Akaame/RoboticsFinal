@@ -71,7 +71,7 @@ def check_blue_hsv(h,s,v):
     return False
 
 def check_blue_rgb(r,g,b):
-    if b>80 and r <25 and b <25:
+    if b>80 and r <25 and g <25:
         return True
     return False
 
@@ -153,12 +153,14 @@ def camera_depth_registered_callback(data):
         else:
             nan_count += 1
     print "Red_count",red_cnt,"Total count", total_count, "NaN count",nan_count ,red_cnt/(total_count-float(nan_count)+1)
+    print "Green_count",green_cnt,"Total count", total_count, "NaN count",nan_count ,green_cnt/(total_count-float(nan_count)+1)
+    print "Blue_count",blue_cnt,"Total count", total_count, "NaN count",nan_count ,blue_cnt/(total_count-float(nan_count)+1)
     if red_cnt/(total_count-float(nan_count)+1) >0.8:
         print "Red Detected"
     if green_cnt/(total_count-float(nan_count)+1) >0.8:
-        print "Red Detected"
+        print "Green Detected"
     if blue_cnt/(total_count-float(nan_count)+1) >0.8:
-        print "Red Detected"
+        print "Blue Detected"
     
     marker_publisher.publish(marker_array)
 
