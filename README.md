@@ -5,22 +5,18 @@
 ### To run color_detect:
 
 ```bash
-TURTLEBOT_GAZEBO_WORLD_FILE=/home/sddk/test_world
-source /opt/ros/kinetic/setup.bash
-source devel/setup.bash
-roslaunch turtlebot_gazebo turtlebot_world.launch
+
+sudo apt-get install python-tf2-sensor-msgs
+sudo cp -r color_detect/sens.py /usr/lib/python2.7/dist-packages/sensor_msgs/point_cloud2.py
+sudo cp -r color_detect/do_trans.py /usr/lib/python2.7/dist-packages/tf2_sensor_msgs/tf2_sensor_msgs.py
 
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
-roslaunch project depth_proc.launch
+roslaunch color_detect color_detect.launch
 
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
-rosrun project run.py
-
-source /opt/ros/kinetic/setup.bash
-source devel/setup.bash
-rosrun rviz rviz
+rosrun color_detect run.py
 ```
 ### To run localization:
 
