@@ -1,16 +1,8 @@
 TURTLEBOT_GAZEBO_WORLD_FILE=./test_world
 source /opt/ros/kinetic/setup.bash
 source ../../../devel/setup.bash
-roslaunch turtlebot_gazebo turtlebot_world.launch
+roslaunch color_detect color_detect.launch
 
 source /opt/ros/kinetic/setup.bash
 source ../../../devel/setup.bash
-roslaunch project depth_proc.launch
-
-source /opt/ros/kinetic/setup.bash
-source ../../../devel/setup.bash
-rosrun project run.py
-
-source /opt/ros/kinetic/setup.bash
-source ../../../devel/setup.bash
-rosrun rviz rviz
+rosrun color_detect run.py
