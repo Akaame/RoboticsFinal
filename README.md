@@ -4,6 +4,7 @@
 
 ### To run color_detect:
 
+```bash
 TURTLEBOT_GAZEBO_WORLD_FILE=/home/sddk/test_world
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
@@ -20,9 +21,10 @@ rosrun project run.py
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
 rosrun rviz rviz
-
+```
 ### To run localization:
 
+```bash
 cp -r gazebo/models/colorselectingplane ~/.gazebo/models
 
 source /opt/ros/kinetic/setup.bash
@@ -32,4 +34,4 @@ roslaunch localization localize.launch
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
 rosrun localization explore.py
-
+```
