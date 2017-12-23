@@ -6,9 +6,16 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
 from math import pi, isnan
 from visualization_msgs.msg import MarkerArray
+import tf
+from tf import transformations
+from geometry_msgs.msg import Transform
+from math import sqrt
 
 
 wall_on_right = True
+counter = 0
+robot_base = tuple()
+lap = 1
 
 def map_callback(data):
     chatty_map = False
@@ -31,7 +38,24 @@ def laser_callback(data):
     motor_command = Twist()
     global motor_command_publisher
     global wall_on_right
+    global listener
+    global counter
+    global robot_base
+    global lap
 
+    (translation, orientation) = listener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
+    if counter == 0:
+        robot_base = (translation[0], translation[1])
+    elif counter != 0:
+        robot_new = (translation[0], translation[1])
+        distance = sqrt(pow(robot_base[0]-robot_new[0], 2) + pow(robot_base[1]-robot_new[1], 2))
+        if distance < 0.2 and counter >= lap*15:
+            global laser
+            laser.unregister()
+            print "Stop"
+        print "Base: " + str(robot_base)
+        print "Now: " + str(robot_new)
+        print "Distance: " + str(distance)
     distances = data.ranges
     length = len(distances)
     leftmost = distances[-1]
@@ -69,6 +93,7 @@ def laser_callback(data):
         motor_command.linear.x = 0
     
     wall_on_right = check
+    counter += 1
     motor_command_publisher.publish(motor_command)
 
 
@@ -77,7 +102,10 @@ def explorer_node():
 
     global motor_command_publisher
     motor_command_publisher = rospy.Publisher("/cmd_vel_mux/input/navi", Twist, queue_size=10)
-    rospy.Subscriber("/scan", LaserScan, laser_callback, queue_size=1000)
+    global listener
+    listener = tf.TransformListener()   
+    global laser 
+    laser = rospy.Subscriber("/scan", LaserScan, laser_callback, queue_size=1000)
     rospy.Subscriber("/map", OccupancyGrid, map_callback, queue_size=1000)
     rospy.spin()
 
