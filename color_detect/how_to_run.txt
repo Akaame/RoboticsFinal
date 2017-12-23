@@ -1,4 +1,4 @@
-TURTLEBOT_GAZEBO_WORLD_FILE=./test_world
+TURTLEBOT_GAZEBO_WORLD_FILE=./test_world.world
 source /opt/ros/kinetic/setup.bash
 source ../../../devel/setup.bash
 roslaunch color_detect color_detect.launch
