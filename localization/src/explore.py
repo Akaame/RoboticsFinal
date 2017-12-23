@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
 from math import pi, isnan
+from visualization_msgs.msg import MarkerArray
 
 
 wall_on_right = True
@@ -48,10 +49,10 @@ def laser_callback(data):
     print 'The distance to the middle scanned point is: ', data.ranges[len(data.ranges)/2]
     print '-------------------------------------------------------------------------------'
 
-    if rightmost > 1.9:
+    if rightmost > 1.3:
         motor_command.angular.z = -pi/3
         motor_command.linear.x = 0.2
-    elif rightmost > 1.2:
+    elif rightmost > 1.0:
         motor_command.angular.z = 0
         motor_command.linear.x = 0.5
     elif wall_on_right == False and check == False:

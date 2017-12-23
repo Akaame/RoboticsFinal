@@ -16,6 +16,8 @@ from sens import read_points
 from geometry_msgs.msg import TransformStamped
 listener = tf.TransformListener()
 marker_publisher = None
+marker_array=MarkerArray()
+marker_cntr=0
 
 def camera_raw_callback(data):
     #print "First element of raw image data", data
@@ -93,7 +95,8 @@ def check_yellow_rgb(r,g,b):
 def camera_depth_registered_callback(data):
     global listener
     global marker_publisher
-
+    global marker_array
+    global marker_cntr
     try:
         (translation,orientation) = listener.lookupTransform("/camera_depth_frame", "/odom", rospy.Time(0))
         do_transform_cloud(data,create_stamped_transform( (translation,orientation) ))
@@ -107,8 +110,8 @@ def camera_depth_registered_callback(data):
     ## find a transform that works on pointcloud2
     from math import isnan
     
-    marker_array=MarkerArray()
-    marker_cntr=0
+    
+    
     red_cnt = 0
     green_cnt = 0
     blue_cnt = 0
@@ -145,79 +148,40 @@ def camera_depth_registered_callback(data):
     print "Green_count",green_cnt,"Total count", total_count, "NaN count",nan_count ,green_cnt/(total_count-float(nan_count)+1)
     print "Blue_count",blue_cnt,"Total count", total_count, "NaN count",nan_count ,blue_cnt/(total_count-float(nan_count)+1)
     print "Yellow_count",yellow_cnt,"Total count", total_count, "NaN count",nan_count ,yellow_cnt/(total_count-float(nan_count)+1)
+    marker=Marker()
+    marker.header.frame_id="odom"
+    marker.id=marker_cntr
+    marker_cntr=marker_cntr+1
+    marker.type=Marker.SPHERE
+    marker.pose.position.x=d[0]
+    marker.pose.position.y=d[1]
+    marker.pose.position.z=d[2]
+    marker.scale.x=0.2
+    marker.scale.y=0.2
+    marker.scale.z=0.2
+    marker.color.a=1.0
+    marker.action = Marker.ADD
     if red_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Red Detected"
-        marker=Marker()
-        marker.header.frame_id="odom"
-        marker.id=marker_cntr
-        marker_cntr=marker_cntr+1
-        marker.type=Marker.SPHERE
-        marker.pose.position.x=d[0]
-        marker.pose.position.y=d[1]
-        marker.pose.position.z=d[2]
-        marker.scale.x=0.2
-        marker.scale.y=0.2
-        marker.scale.z=0.2
         marker.color.r=1.0
         marker.color.g=0.0
         marker.color.b=0.0
-        marker.color.a=1.0
-        marker_array.markers.append(marker)
     if green_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Green Detected"
-        marker=Marker()
-        marker.header.frame_id="odom"
-        marker.id=marker_cntr
-        marker_cntr=marker_cntr+1
-        marker.type=Marker.SPHERE
-        marker.pose.position.x=d[0]
-        marker.pose.position.y=d[1]
-        marker.pose.position.z=d[2]
-        marker.scale.x=0.2
-        marker.scale.y=0.2
-        marker.scale.z=0.2
         marker.color.r=0.0
         marker.color.g=1.0
         marker.color.b=0.0
-        marker.color.a=1.0
-        marker_array.markers.append(marker)
     if blue_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Blue Detected"
-        marker=Marker()
-        marker.header.frame_id="odom"
-        marker.id=marker_cntr
-        marker_cntr=marker_cntr+1
-        marker.type=Marker.SPHERE
-        marker.pose.position.x=d[0]
-        marker.pose.position.y=d[1]
-        marker.pose.position.z=d[2]
-        marker.scale.x=0.2
-        marker.scale.y=0.2
-        marker.scale.z=0.2
         marker.color.r=0.0
         marker.color.g=0.0
         marker.color.b=1.0
-        marker.color.a=1.0
-        marker_array.markers.append(marker)
     if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Yellow Detected"
-        marker=Marker()
-        marker.header.frame_id="odom"
-        marker.id=marker_cntr
-        marker_cntr=marker_cntr+1
-        marker.type=Marker.SPHERE
-        marker.pose.position.x=d[0]
-        marker.pose.position.y=d[1]
-        marker.pose.position.z=d[2]
-        marker.scale.x=0.2
-        marker.scale.y=0.2
-        marker.scale.z=0.2
         marker.color.r=1.0
         marker.color.g=1.0
         marker.color.b=0.0
-        marker.color.a=1.0
-        marker_array.markers.append(marker)
-    
+    marker_array.markers.append(marker)
     marker_publisher.publish(marker_array)
 
 
