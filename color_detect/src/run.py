@@ -85,6 +85,11 @@ def check_green_rgb(r,g,b):
         return True
     return False
 
+def check_yellow_rgb(r,g,b):
+    if g>80 and r >80 and b <25:
+        return True
+    return False
+
 def camera_depth_registered_callback(data):
     global listener
     global marker_publisher
@@ -107,6 +112,7 @@ def camera_depth_registered_callback(data):
     red_cnt = 0
     green_cnt = 0
     blue_cnt = 0
+    yellow_cnt = 0
     total_count = 0
     nan_count = 0
     for d in read_points(data): # use read_points method
@@ -131,8 +137,8 @@ def camera_depth_registered_callback(data):
                 green_cnt+=1
             if check_blue_rgb(r,g,b):
                 blue_cnt +=1
-                
-            """
+            if check_yellow_rgb(r,g,b):
+                yellow_cnt +=1
             marker=Marker()
             marker.header.frame_id="odom"
             marker.id=marker_cntr
@@ -149,18 +155,84 @@ def camera_depth_registered_callback(data):
             marker.color.g=1.0
             marker.color.b=0.0
             marker.color.a=1.0
-            """
         else:
             nan_count += 1
     print "Red_count",red_cnt,"Total count", total_count, "NaN count",nan_count ,red_cnt/(total_count-float(nan_count)+1)
     print "Green_count",green_cnt,"Total count", total_count, "NaN count",nan_count ,green_cnt/(total_count-float(nan_count)+1)
     print "Blue_count",blue_cnt,"Total count", total_count, "NaN count",nan_count ,blue_cnt/(total_count-float(nan_count)+1)
-    if red_cnt/(total_count-float(nan_count)+1) >0.8:
+    print "Yellow_count",yellow_cnt,"Total count", total_count, "NaN count",nan_count ,yellow_cnt/(total_count-float(nan_count)+1)
+    if red_cnt/(total_count-float(nan_count)+1) >0.15:
         print "Red Detected"
-    if green_cnt/(total_count-float(nan_count)+1) >0.8:
+	marker=Marker()
+        marker.header.frame_id="odom"
+        marker.id=marker_cntr
+        marker_cntr=marker_cntr+1
+        marker.type=Marker.SPHERE
+        marker.pose.position.x=d[0]
+        marker.pose.position.y=d[1]
+        marker.pose.position.z=d[2]
+        marker.scale.x=0.2
+        marker.scale.y=0.2
+        marker.scale.z=0.2
+        marker.color.r=1.0
+        marker.color.g=0.0
+        marker.color.b=0.0
+        marker.color.a=1.0
+ 	marker_array.markers.append(marker)
+    if green_cnt/(total_count-float(nan_count)+1) >0.15:
         print "Green Detected"
-    if blue_cnt/(total_count-float(nan_count)+1) >0.8:
+	marker=Marker()
+        marker.header.frame_id="odom"
+        marker.id=marker_cntr
+        marker_cntr=marker_cntr+1
+        marker.type=Marker.SPHERE
+        marker.pose.position.x=d[0]
+        marker.pose.position.y=d[1]
+        marker.pose.position.z=d[2]
+        marker.scale.x=0.2
+        marker.scale.y=0.2
+        marker.scale.z=0.2
+        marker.color.r=0.0
+        marker.color.g=1.0
+        marker.color.b=0.0
+        marker.color.a=1.0
+        marker_array.markers.append(marker)
+    if blue_cnt/(total_count-float(nan_count)+1) >0.15:
         print "Blue Detected"
+	marker=Marker()
+        marker.header.frame_id="odom"
+        marker.id=marker_cntr
+        marker_cntr=marker_cntr+1
+        marker.type=Marker.SPHERE
+        marker.pose.position.x=d[0]
+        marker.pose.position.y=d[1]
+        marker.pose.position.z=d[2]
+        marker.scale.x=0.2
+        marker.scale.y=0.2
+        marker.scale.z=0.2
+        marker.color.r=0.0
+        marker.color.g=0.0
+        marker.color.b=1.0
+        marker.color.a=1.0
+ 	marker_array.markers.append(marker)
+    if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
+        print "Yellow Detected"
+	marker=Marker()
+        marker.header.frame_id="odom"
+        marker.id=marker_cntr
+        marker_cntr=marker_cntr+1
+        marker.type=Marker.SPHERE
+        marker.pose.position.x=d[0]
+        marker.pose.position.y=d[1]
+        marker.pose.position.z=d[2]
+        marker.scale.x=0.2
+        marker.scale.y=0.2
+        marker.scale.z=0.2
+        marker.color.r=1.0
+        marker.color.g=1.0
+        marker.color.b=0.0
+        marker.color.a=1.0
+ 	marker_array.markers.append(marker)
     
     marker_publisher.publish(marker_array)
 
