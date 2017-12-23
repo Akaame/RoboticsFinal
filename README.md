@@ -12,7 +12,7 @@ sudo cp -r color_detect/do_trans.py /usr/lib/python2.7/dist-packages/tf2_sensor_
 
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
-roslaunch color_detect color_detect.launch
+roslaunch color_selector color_selector.launch
 
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
@@ -25,7 +25,7 @@ cp -r gazebo/models/colorselectingplane ~/.gazebo/models
 
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
-roslaunch localization localize.launch
+roslaunch color_selector color_selector.launch
 
 source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
