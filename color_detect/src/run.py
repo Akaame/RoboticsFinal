@@ -19,13 +19,41 @@ marker_publisher = None
 marker_array=MarkerArray()
 marker_cntr=0
 
-def camera_raw_callback(data):
-    #print "First element of raw image data", data
-    pass
 
-def camera_depth_callback(data):
-    #print "First element of depth image data", data
-    pass
+marker_dict = {
+    'left':{
+        'red': [],
+        'green': [],
+        'blue': [],
+        'yellow': []
+    },
+    'right':{
+        'red': [],
+        'green': [],
+        'blue': [],
+        'yellow': []
+    }
+}
+
+def get_current_no_colors():
+    """ 
+    Get currently detected number of colors. 
+    1 for each color on each side.
+    Max:8 
+    """
+    l = lambda x: {1 if len(x)>0 else 0}
+    a = map(l,marker_dict['left'].itervalues())
+    b = map(l,marker_dict['right'].itervalues())
+    total = 0
+    for item in a+b:
+        total+=sum(item)
+    return total
+
+import numpy as np
+def get_cluster_mean(arr):
+    """ Get cluster mean of XYZ data """
+    nparr = np.array(arr)
+    return np.mean(arr, axis=0)
     
 def create_stamped_transform(t):
     st_tf = TransformStamped()
@@ -160,24 +188,30 @@ def camera_depth_registered_callback(data):
     marker.scale.y=0.2
     marker.scale.z=0.2
     marker.color.a=1.0
+    pos = [d[0],d[1],d[2]]
+    direction = 'right' if get_current_no_colors()>4 else 'left' 
     marker.action = Marker.ADD
     if red_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Red Detected"
+        marker_dict[direction]['red'].append(pos)
         marker.color.r=1.0
         marker.color.g=0.0
         marker.color.b=0.0
     if green_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Green Detected"
+        marker_dict[direction]['green'].append(pos)
         marker.color.r=0.0
         marker.color.g=1.0
         marker.color.b=0.0
     if blue_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Blue Detected"
+        marker_dict[direction]['blue'].append(pos)
         marker.color.r=0.0
         marker.color.g=0.0
         marker.color.b=1.0
     if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Yellow Detected"
+        marker_dict[direction]['yellow'].append(pos)
         marker.color.r=1.0
         marker.color.g=1.0
         marker.color.b=0.0
@@ -188,12 +222,8 @@ def camera_depth_registered_callback(data):
 def color_detection_node():
     global listener
     global marker_publisher
-    ## We must always do this when starting a ROS node - and it should be the first thing to happen
     rospy.init_node('color_detect')
-    ## Here we set the function laser_callback to recieve new laser messages when they arrive
     #rospy.Subscriber("/camera/depth/image_raw", Image, camera_raw_callback, queue_size = 10000)
-    
-    ## Here we set the function map_callback to recieve new map messages when they arrive from the mapping subsystem
     #rospy.Subscriber("/camera/depth/points", PointCloud2, camera_depth_callback, queue_size = 10000)
     
     # use depth_image_proc ros package to generate xyzrgb images
@@ -202,9 +232,9 @@ def color_detection_node():
     # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
     marker_publisher =  rospy.Publisher("/project/markers", MarkerArray,queue_size=10000000)
     
-    ## define two tf transforms as in hw2 answer from camera to base base to global TODO DONE
-    ## use tf transform to transform pointcloud data TODO DONE
-    ## publish rviz markers as in hw2 referee TODO DONE
+    ## define two tf transforms as in hw2 answer from camera to base base to global
+    ## use tf transform to transform pointcloud data
+    ## publish rviz markers as in hw2 referee
 
     ## spin is an infinite loop but it lets callbacks to be called when a new data available. That means spin keeps this node not terminated and run the callback when nessessary. 
     rospy.spin()
