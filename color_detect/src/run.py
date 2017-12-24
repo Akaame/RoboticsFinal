@@ -164,7 +164,7 @@ def camera_depth_registered_callback(data):
             #if check_red_hsv(*colorsys.rgb_to_hsv(r,g,b)):
             #    #print "RED"
             #    red_cnt += 1
-            print r,g,b
+            # print r,g,b
             if check_red_rgb(r,g,b):
                 red_cnt +=1
             if check_green_rgb(r,g,b):
@@ -232,7 +232,14 @@ def lap_callback(msg):
         # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
     elif msg.data == 2:
         detector.unregister()
-
+        dirs = ['left', 'right']
+        colors = ['red', 'green','blue','yellow']
+        for d in dirs:
+            for c in colors:
+                marker_dict[d][c] = get_cluster_mean(marker_dict[d][c])
+        from pprint import pprint
+        pprint(marker_dict)
+        # publish marker here maybe
 def color_detection_node():
     global listener
     global marker_publisher
