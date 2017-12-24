@@ -45,6 +45,8 @@ def get_current_no_colors():
     1 for each color on each side.
     Max:8 
     """
+    if not start:
+        return
     l = lambda x: {1 if len(x)>0 else 0}
     a = map(l,marker_dict['left'].itervalues())
     b = map(l,marker_dict['right'].itervalues())
@@ -192,32 +194,49 @@ def camera_depth_registered_callback(data):
     marker.scale.y=0.2
     marker.scale.z=0.2
     marker.color.a=1.0
+<<<<<<< Updated upstream
     pos = [translation[0], translation[1]]
     print pos
+=======
+    pos = [tranlation[0] + d[0],translation[1] + d[1],d[2]]
+    
+>>>>>>> Stashed changes
     direction = 'right' if get_current_no_colors()>4 else 'left' 
     marker.action = Marker.ADD
-    if red_cnt/(total_count-float(nan_count)+1) >0.1:
+    if red_cnt/(total_count-float(nan_count)+1) >0.05:
         print "Red Detected"
         marker_dict[direction]['red'].append(pos)
         marker.color.r=1.0
         marker.color.g=0.0
         marker.color.b=0.0
+<<<<<<< Updated upstream
         marker_array.markers.append(marker)
     if green_cnt/(total_count-float(nan_count)+1) >0.1:
+=======
+    if green_cnt/(total_count-float(nan_count)+1) >0.05:
+>>>>>>> Stashed changes
         print "Green Detected"
         marker_dict[direction]['green'].append(pos)
         marker.color.r=0.0
         marker.color.g=1.0
         marker.color.b=0.0
+<<<<<<< Updated upstream
         marker_array.markers.append(marker)
     if blue_cnt/(total_count-float(nan_count)+1) >0.1:
+=======
+    if blue_cnt/(total_count-float(nan_count)+1) >0.05:
+>>>>>>> Stashed changes
         print "Blue Detected"
         marker_dict[direction]['blue'].append(pos)
         marker.color.r=0.0
         marker.color.g=0.0
         marker.color.b=1.0
+<<<<<<< Updated upstream
         marker_array.markers.append(marker)
     if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
+=======
+    if yellow_cnt/(total_count-float(nan_count)+1) >0.05:
+>>>>>>> Stashed changes
         print "Yellow Detected"
         marker_dict[direction]['yellow'].append(pos)
         marker.color.r=1.0
@@ -238,6 +257,7 @@ def lap_callback(msg):
         # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
     elif msg.data == 2:
         detector.unregister()
+        start = False
         dirs = ['left', 'right']
         colors = ['red', 'green','blue','yellow']
         for d in dirs:
@@ -245,7 +265,8 @@ def lap_callback(msg):
                 marker_dict[d][c] = get_cluster_mean(marker_dict[d][c])
         from pprint import pprint
         pprint(marker_dict)
-        # publish marker here maybe
+        # publish marker here maybe    
+
 def color_detection_node():
     global listener
     global marker_publisher
