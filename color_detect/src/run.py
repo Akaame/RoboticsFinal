@@ -271,23 +271,28 @@ def lap_callback(msg):
                 marker_dict[d][c] = get_cluster_mean(marker_dict[d][c])
         from pprint import pprint
         pprint(marker_dict)
-        goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = "base_link"
-        goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = marker_dict["left"]["green"][0]
-        goal.target_pose.pose.position.y = marker_dict["left"]["green"][1]
-        goal.target_pose.pose.orientation.w = 1.0
-        action_client.send_goal(goal)
-        success = action_client.wait_for_result(rospy.Duration(60))
-        if not success:
-            action_client.cancel_goal()
-            rospy.loginfo("The base failed to move forward 3 meters for some reason")
-    	else:
-		    # We made it!
-		    state = action_client.get_state()
-		    if state == GoalStatus.SUCCEEDED:
-		        rospy.loginfo("Hooray, the base moved 3 meters forward")
-        # publish marker here maybe    
+        ########################################################
+        # TEST EDILMESI LAZIM SAGLIKLI NOKTA BULUNMUS BIR MAPTE#
+        ########################################################
+        for c in colors:
+            for d in dirs:        
+                goal = MoveBaseGoal()
+                goal.target_pose.header.frame_id = "base_link"
+                goal.target_pose.header.stamp = rospy.Time.now()
+                goal.target_pose.pose.position.x = marker_dict[d][c][0]
+                goal.target_pose.pose.position.y = marker_dict[d][c][1]
+                goal.target_pose.pose.orientation.w = 1.0
+                action_client.send_goal(goal)
+                success = action_client.wait_for_result(rospy.Duration(60))
+                if not success:
+                    action_client.cancel_goal()
+                    rospy.loginfo("The base failed to move forward 3 meters for some reason")
+                else:
+                    # We made it!
+                    state = action_client.get_state()
+                    if state == GoalStatus.SUCCEEDED:
+                        rospy.loginfo("Hooray, the base moved 3 meters forward")
+                # publish marker here maybe    
 
 def color_detection_node():
     global listener
