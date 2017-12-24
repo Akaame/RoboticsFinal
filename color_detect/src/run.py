@@ -14,10 +14,13 @@ import tf
 from do_trans import do_transform_cloud # sudo apt-get install python-tf2-sensor-msgs
 from sens import read_points
 from geometry_msgs.msg import TransformStamped
+from std_msgs.msg import Int32
+
 listener = tf.TransformListener()
 marker_publisher = None
 marker_array=MarkerArray()
 marker_cntr=0
+start = False
 
 
 marker_dict = {
@@ -218,6 +221,17 @@ def camera_depth_registered_callback(data):
     marker_array.markers.append(marker)
     marker_publisher.publish(marker_array)
 
+def lap_callback(msg):
+    global start
+    if msg.data == 1 and not start:
+        start = True
+        # use depth_image_proc ros package to generate xyzrgb images
+        # subscribe to depth_registered/points
+        global detector
+        detector = rospy.Subscriber("camera/depth_registered/points", PointCloud2, camera_depth_registered_callback, queue_size = 10000000)
+        # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
+    elif msg.data == 2:
+        detector.unregister()
 
 def color_detection_node():
     global listener
@@ -226,13 +240,9 @@ def color_detection_node():
     #rospy.Subscriber("/camera/depth/image_raw", Image, camera_raw_callback, queue_size = 10000)
     #rospy.Subscriber("/camera/depth/points", PointCloud2, camera_depth_callback, queue_size = 10000)
     
-    # use depth_image_proc ros package to generate xyzrgb images
-    # subscribe to depth_registered/points
-    rospy.Subscriber("camera/depth_registered/points", PointCloud2, camera_depth_registered_callback, queue_size = 10000000)
-    # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
-    marker_publisher =  rospy.Publisher("/project/markers", MarkerArray,queue_size=10000000)
     
-    ## define two tf transforms as in hw2 answer from camera to base base to global
+    marker_publisher =  rospy.Publisher("/project/markers", MarkerArray,queue_size=10000000)
+    rospy.Subscriber("/explorer", Int32, lap_callback, queue_size=1000)    ## define two tf transforms as in hw2 answer from camera to base base to global
     ## use tf transform to transform pointcloud data
     ## publish rviz markers as in hw2 referee
 

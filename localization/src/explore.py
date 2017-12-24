@@ -10,12 +10,16 @@ import tf
 from tf import transformations
 from geometry_msgs.msg import Transform
 from math import sqrt
+from std_msgs.msg import Int32
 
 
 wall_on_right = True
 counter = 0
 robot_base = tuple()
-lap = 1
+lap = 2
+current_lap = 1
+finish_lap = False
+min_move = 15
 
 def map_callback(data):
     chatty_map = False
@@ -42,6 +46,10 @@ def laser_callback(data):
     global counter
     global robot_base
     global lap
+    global finish_lap
+    global current_lap
+    global min_move
+    global publish_lap
 
     (translation, orientation) = listener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
     if counter == 0:
@@ -49,10 +57,16 @@ def laser_callback(data):
     elif counter != 0:
         robot_new = (translation[0], translation[1])
         distance = sqrt(pow(robot_base[0]-robot_new[0], 2) + pow(robot_base[1]-robot_new[1], 2))
-        if distance < 0.2 and counter >= lap*15:
-            global laser
-            laser.unregister()
-            print "Stop"
+        if distance < 0.2 and counter >= current_lap*min_move:
+            publish_lap.publish(current_lap)
+            if current_lap == lap:
+                global laser
+                laser.unregister()
+                print "Stop"
+            if not finish_lap:
+                finish_lap = True
+                min_move = counter
+            current_lap += 1
         print "Base: " + str(robot_base)
         print "Now: " + str(robot_new)
         print "Distance: " + str(distance)
@@ -107,6 +121,8 @@ def explorer_node():
     global laser 
     laser = rospy.Subscriber("/scan", LaserScan, laser_callback, queue_size=1000)
     rospy.Subscriber("/map", OccupancyGrid, map_callback, queue_size=1000)
+    global publish_lap 
+    publish_lap = rospy.Publisher("/explorer", Int32, queue_size=1000)
     rospy.spin()
 
 if __name__=="__main__":
