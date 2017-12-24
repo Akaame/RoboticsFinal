@@ -15,6 +15,9 @@ from do_trans import do_transform_cloud # sudo apt-get install python-tf2-sensor
 from sens import read_points
 from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Int32, String
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from actionlib_msgs.msg import *
+import actionlib
 
 listener = tf.TransformListener()
 marker_publisher = None
@@ -231,6 +234,7 @@ def camera_depth_registered_callback(data):
 def lap_callback(msg):
     print msg.data
     global start
+    global action_client
     if msg.data == 1 and not start:
         start = True
         # use depth_image_proc ros package to generate xyzrgb images
@@ -248,6 +252,22 @@ def lap_callback(msg):
                 marker_dict[d][c] = get_cluster_mean(marker_dict[d][c])
         from pprint import pprint
         pprint(marker_dict)
+        goal = MoveBaseGoal()
+        goal.target_pose.header.frame_id = "base_link"
+        goal.target_pose.header.stamp = rospy.Time.now()
+        goal.target_pose.pose.position.x = marker_dict["left"]["green"][0]
+        goal.target_pose.pose.position.y = marker_dict["left"]["green"][1]
+        goal.target_pose.pose.orientation.w = 1.0
+        action_client.send_goal(goal)
+        success = action_client.wait_for_result(rospy.Duration(60))
+        if not success:
+            action_client.cancel_goal()
+            rospy.loginfo("The base failed to move forward 3 meters for some reason")
+    	else:
+		    # We made it!
+		    state = action_client.get_state()
+		    if state == GoalStatus.SUCCEEDED:
+		        rospy.loginfo("Hooray, the base moved 3 meters forward")
         # publish marker here maybe    
 
 def color_detection_node():
@@ -257,7 +277,9 @@ def color_detection_node():
     rospy.init_node('color_detect')
     #rospy.Subscriber("/camera/depth/image_raw", Image, camera_raw_callback, queue_size = 10000)
     #rospy.Subscriber("/camera/depth/points", PointCloud2, camera_depth_callback, queue_size = 10000)
-    
+    global action_client
+    action_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+    action_client.wait_for_server(rospy.Duration(5))
     
     marker_publisher =  rospy.Publisher("/project/markers", MarkerArray,queue_size=10000000)
     rospy.Subscriber("/explorer", Int32, lap_callback, queue_size=1000)    ## define two tf transforms as in hw2 answer from camera to base base to global

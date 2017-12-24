@@ -37,6 +37,9 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find color_selector)/rviz/color_selector.rviz" />
   <include file="$(find color_selector)/launch/gmapping.launch"/>
+  <include file="$(find turtlebot_navigation)/launch/includes/amcl.launch.xml"/>
+
+  <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
 
   <!--
   To distinguish between the cases where the rgb image is
