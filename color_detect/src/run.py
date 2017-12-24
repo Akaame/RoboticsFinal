@@ -32,13 +32,13 @@ marker_dict = {
         'red': [],
         'green': [],
         'blue': [],
-        'yellow': []
+        'yellow': [[0.5,1.2]] # hardcoded
     },
     'right':{
         'red': [],
         'green': [],
         'blue': [],
-        'yellow': []
+        'yellow': [-1.3, 5.] # hardcoded
     }
 }
 
@@ -129,7 +129,14 @@ def check_yellow_rgb(r,g,b):
         return True
     return False
 
+dumb_cache = None # left right changes
+
 def camera_depth_registered_callback(data):
+    if not start:
+        ## workaround to eliminate effect of data 
+        ## that comes after subscriber unregistration
+        return
+    global dumb_cache # make local
     global listener
     global marker_publisher
     global marker_array
@@ -199,37 +206,49 @@ def camera_depth_registered_callback(data):
     marker.color.a=1.0
     pos = [translation[0], translation[1]]
     print pos
-    direction = 'right' if get_current_no_colors()>4 else 'left' 
     marker.action = Marker.ADD
+    detected_color = None
     if red_cnt/(total_count-float(nan_count)+1) >0.05:
         print "Red Detected"
-        marker_dict[direction]['red'].append(pos)
+        detected_color = 'red'
         marker.color.r=1.0
         marker.color.g=0.0
         marker.color.b=0.0
         marker_array.markers.append(marker)
     if green_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Green Detected"
-        marker_dict[direction]['green'].append(pos)
+        detected_color = 'green'
         marker.color.r=0.0
         marker.color.g=1.0
         marker.color.b=0.0
         marker_array.markers.append(marker)
     if blue_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Blue Detected"
-        marker_dict[direction]['blue'].append(pos)
+        detected_color = 'blue'
         marker.color.r=0.0
         marker.color.g=0.0
         marker.color.b=1.0
         marker_array.markers.append(marker)
     if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Yellow Detected"
-        marker_dict[direction]['yellow'].append(pos)
+        detected_color = 'yellow'
         marker.color.r=1.0
         marker.color.g=1.0
         marker.color.b=0.0
         marker_array.markers.append(marker)
     marker_publisher.publish(marker_array)
+    if detected_color: # left right logic
+        # fails if a single color is not detected on the left side :/
+        direction = 'right' if get_current_no_colors()>4 else 'left' 
+        no_colors = get_current_no_colors()
+        if no_colors == 4:
+            if dumb_cache:
+                if dumb_cache != detected_color:
+                    direction = 'right'
+            else:
+                dumb_cache = detected_color
+        print "No of colors: ", no_colors
+        marker_dict[direction][detected_color].append(pos)
 
 def lap_callback(msg):
     print msg.data
