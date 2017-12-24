@@ -194,8 +194,8 @@ def camera_depth_registered_callback(data):
     marker.scale.y=0.2
     marker.scale.z=0.2
     marker.color.a=1.0
-    pos = [tranlation[0] + d[0],translation[1] + d[1],d[2]]
-    
+    pos = [translation[0], translation[1]]
+    print pos
     direction = 'right' if get_current_no_colors()>4 else 'left' 
     marker.action = Marker.ADD
     if red_cnt/(total_count-float(nan_count)+1) >0.05:
@@ -204,19 +204,22 @@ def camera_depth_registered_callback(data):
         marker.color.r=1.0
         marker.color.g=0.0
         marker.color.b=0.0
-    if green_cnt/(total_count-float(nan_count)+1) >0.05:
+        marker_array.markers.append(marker)
+    if green_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Green Detected"
         marker_dict[direction]['green'].append(pos)
         marker.color.r=0.0
         marker.color.g=1.0
         marker.color.b=0.0
-    if blue_cnt/(total_count-float(nan_count)+1) >0.05:
+        marker_array.markers.append(marker)
+    if blue_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Blue Detected"
         marker_dict[direction]['blue'].append(pos)
         marker.color.r=0.0
         marker.color.g=0.0
         marker.color.b=1.0
-    if yellow_cnt/(total_count-float(nan_count)+1) >0.05:
+        marker_array.markers.append(marker)
+    if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Yellow Detected"
         marker_dict[direction]['yellow'].append(pos)
         marker.color.r=1.0
