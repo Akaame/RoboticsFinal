@@ -14,13 +14,14 @@ import tf
 from do_trans import do_transform_cloud # sudo apt-get install python-tf2-sensor-msgs
 from sens import read_points
 from geometry_msgs.msg import TransformStamped
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, String
 
 listener = tf.TransformListener()
 marker_publisher = None
 marker_array=MarkerArray()
-marker_cntr=0
+marker_cntr=1
 start = False
+detector = None
 
 
 marker_dict = {
@@ -128,8 +129,9 @@ def camera_depth_registered_callback(data):
     global marker_publisher
     global marker_array
     global marker_cntr
+    global detect_status_pub
     try:
-        (translation,orientation) = listener.lookupTransform("/camera_depth_frame", "/odom", rospy.Time(0))
+        (translation,orientation) = listener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
         do_transform_cloud(data,create_stamped_transform( (translation,orientation) ))
         # print "Odometry base translation", translation,orientation
     except  (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
@@ -184,14 +186,14 @@ def camera_depth_registered_callback(data):
     marker.id=marker_cntr
     marker_cntr=marker_cntr+1
     marker.type=Marker.SPHERE
-    marker.pose.position.x=d[0]
-    marker.pose.position.y=d[1]
-    marker.pose.position.z=d[2]
+    marker.pose.position.x=translation[0]
+    marker.pose.position.y=translation[1]
     marker.scale.x=0.2
     marker.scale.y=0.2
     marker.scale.z=0.2
     marker.color.a=1.0
-    pos = [d[0],d[1],d[2]]
+    pos = [translation[0], translation[1]]
+    print pos
     direction = 'right' if get_current_no_colors()>4 else 'left' 
     marker.action = Marker.ADD
     if red_cnt/(total_count-float(nan_count)+1) >0.1:
@@ -200,28 +202,32 @@ def camera_depth_registered_callback(data):
         marker.color.r=1.0
         marker.color.g=0.0
         marker.color.b=0.0
+        marker_array.markers.append(marker)
     if green_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Green Detected"
         marker_dict[direction]['green'].append(pos)
         marker.color.r=0.0
         marker.color.g=1.0
         marker.color.b=0.0
+        marker_array.markers.append(marker)
     if blue_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Blue Detected"
         marker_dict[direction]['blue'].append(pos)
         marker.color.r=0.0
         marker.color.g=0.0
         marker.color.b=1.0
+        marker_array.markers.append(marker)
     if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
         print "Yellow Detected"
         marker_dict[direction]['yellow'].append(pos)
         marker.color.r=1.0
         marker.color.g=1.0
         marker.color.b=0.0
-    marker_array.markers.append(marker)
+        marker_array.markers.append(marker)
     marker_publisher.publish(marker_array)
 
 def lap_callback(msg):
+    print msg.data
     global start
     if msg.data == 1 and not start:
         start = True
@@ -236,6 +242,7 @@ def lap_callback(msg):
 def color_detection_node():
     global listener
     global marker_publisher
+    global detect_status_pub
     rospy.init_node('color_detect')
     #rospy.Subscriber("/camera/depth/image_raw", Image, camera_raw_callback, queue_size = 10000)
     #rospy.Subscriber("/camera/depth/points", PointCloud2, camera_depth_callback, queue_size = 10000)
@@ -245,7 +252,7 @@ def color_detection_node():
     rospy.Subscriber("/explorer", Int32, lap_callback, queue_size=1000)    ## define two tf transforms as in hw2 answer from camera to base base to global
     ## use tf transform to transform pointcloud data
     ## publish rviz markers as in hw2 referee
-
+    detect_status_pub = rospy.Publisher("/color_detect", String, queue_size=1000)
     ## spin is an infinite loop but it lets callbacks to be called when a new data available. That means spin keeps this node not terminated and run the callback when nessessary. 
     rospy.spin()
     
