@@ -38,7 +38,7 @@ marker_dict = {
         'red': [],
         'green': [],
         'blue': [],
-        'yellow': [-1.3, 5.] # hardcoded
+        'yellow': [[-1.3, 5.]] # hardcoded
     }
 }
 
@@ -233,7 +233,7 @@ def camera_depth_registered_callback(data):
         marker.color.g=0.0
         marker.color.b=1.0
         marker_array.markers.append(marker)
-    if yellow_cnt/(total_count-float(nan_count)+1) >0.1:
+    if yellow_cnt/(total_count-float(nan_count)+1) >0.06:
         print "Yellow Detected"
         detected_color = 'yellow'
         marker.color.r=1.0
@@ -244,16 +244,17 @@ def camera_depth_registered_callback(data):
     marker_publisher.publish(marker_array)
     if detected_color: # left right logic
         # fails if a single color is not detected on the left side :/
-        direction = 'right' if get_current_no_colors()>4 else 'left' 
+        direction = 'right' if get_current_no_colors()>5 else 'left' 
         no_colors = get_current_no_colors()
-        if no_colors == 4:
+        if no_colors == 5:
             if dumb_cache:
                 if dumb_cache != detected_color: # check if a new color is detected at the left-right turn
                     direction = 'right'
             else:
                 dumb_cache = detected_color
         print "No of colors: ", no_colors
-        marker_dict[direction][detected_color].append(pos) # update marker_dict with detected color
+        if not type(marker_dict[direction][detected_color])==type(np.array([])):
+            marker_dict[direction][detected_color].append(pos) # update marker_dict with detected color
 
 def lap_callback(msg):
     """ Check in which lap the robot is currently in """
@@ -285,8 +286,7 @@ def lap_callback(msg):
                 goal.target_pose.header.frame_id = "base_link"
                 goal.target_pose.header.stamp = rospy.Time.now()
                 # go towards cluster means 
-                from math import isnan
-                if isnan(marker_dict[d][c]):
+                if not type(marker_dict[d][c])==type(np.array([])):
                     continue
                 goal.target_pose.pose.position.x = marker_dict[d][c][0]
                 goal.target_pose.pose.position.y = marker_dict[d][c][1]
