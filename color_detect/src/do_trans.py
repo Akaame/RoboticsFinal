@@ -1,6 +1,17 @@
 # Copyright (c) 2008, Willow Garage, Inc.
 # All rights reserved.
 # 
+
+#######################################################################
+# This code is not ours
+# This is the transform_msgs library from original ROS packages
+# Original library defines a faulty implementation of do_transform_cloud method
+# This is later corrected in a bleeding edge version of the library.
+# The function taken from that version.
+########################################################################
+
+
+
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 # 

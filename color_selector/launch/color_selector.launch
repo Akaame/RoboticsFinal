@@ -40,7 +40,11 @@
   <include file="$(find turtlebot_navigation)/launch/includes/amcl.launch.xml"/>
 
   <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
-
+  <!--
+  THE FOLLOWING PART OF THE LAUNCH FILE IS TAKEN FROM
+  3D IMAGE PROCESSING PIPELINE SAMPLE FILES WITH MODIFICATIONS.
+  https://gist.github.com/bhaskara/2400165
+  -->
   <!--
   To distinguish between the cases where the rgb image is
   1280x1024 versus 640x480.  This affects the pipeline.

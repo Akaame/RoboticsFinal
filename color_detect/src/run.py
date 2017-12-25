@@ -19,14 +19,14 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import *
 import actionlib
 
-listener = tf.TransformListener()
-marker_publisher = None
-marker_array=MarkerArray()
-marker_cntr=1
-start = False
-detector = None
+listener = tf.TransformListener() # create transform listener for robot coordinates
+marker_publisher = None # marker publisher for detected colors
+marker_array=MarkerArray() # marker array for markers to be published
+marker_cntr=1 # counter of markers
+start = False # start control variable
+detector = None 
 
-
+# to hold detected color coordinates
 marker_dict = {
     'left':{
         'red': [],
@@ -65,6 +65,7 @@ def get_cluster_mean(arr):
     return np.mean(arr, axis=0)
     
 def create_stamped_transform(t):
+    """ Create a stamped transform from a normal Transform """
     st_tf = TransformStamped()
     st_tf.transform.translation.x = t[0][0]
     st_tf.transform.translation.y = t[0][1]
@@ -77,6 +78,10 @@ def create_stamped_transform(t):
     return st_tf
 
 def get_rgb_from_cloud_field(rgb):
+    """
+    Extract RGB data field from PointCloud2 data field.
+    The last entry of PointCloud2 data encodes color information in a floating point number.
+    """
     import struct
     import ctypes
     test = rgb
@@ -95,36 +100,43 @@ def get_rgb_from_cloud_field(rgb):
     return r,g,b # prints r,g,b values in the 0-255 range 
 
 def check_red_hsv(h,s,v):
+    """ Red threshold for HSV color space """
     if -1< h < 20 and 40<s<100 and 40<v<100:
         return True
     return False
 
 def check_red_rgb(r,g,b):
+    """ Red threshold for RGB color space """
     if r>80 and g <25 and b <25:
         return True
     return False
 
 def check_blue_hsv(h,s,v):
+    """ Blue threshold for HSV color space """
     if 140< h < 190 and 40<s<100 and 40<v<100:
         return True
     return False
 
 def check_blue_rgb(r,g,b):
+    """ Blue threshold for RGB color space """
     if b>80 and r <25 and g <25:
         return True
     return False
 
 def check_green_hsv(h,s,v):
+    """ Green threshold for HSV color space """
     if 100< h < 140 and 40<s<100 and 40<v<100:
         return True
     return False
 
 def check_green_rgb(r,g,b):
+    """ Green threshold for RGB color space """
     if g>80 and r <25 and b <25:
         return True
     return False
 
 def check_yellow_rgb(r,g,b):
+    """ Yellow threshold for RGB color space """
     if g>80 and r >80 and b <25:
         return True
     return False
@@ -145,17 +157,14 @@ def camera_depth_registered_callback(data):
     try:
         (translation,orientation) = listener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
         do_transform_cloud(data,create_stamped_transform( (translation,orientation) ))
-        # print "Odometry base translation", translation,orientation
+        # Get transformation between odometry base_footprint
     except  (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
         print("EXCEPTION:",e)
-        #if something goes wrong with this just go to bed for a second or so and wake up hopefully refreshed.
         return
 
-    #listener.transformPointCloud("/odom",data)  # works on pointcloud data DONE
-    ## find a transform that works on pointcloud2
+    # listener.transformPointCloud("/odom",data)  # works on PointCloud data
+    ## We will use a transform that works on PointCloud2
     from math import isnan
-    
-    
     
     red_cnt = 0
     green_cnt = 0
@@ -166,19 +175,13 @@ def camera_depth_registered_callback(data):
     for d in read_points(data): # use read_points method
         total_count += 1
         if not isnan(d[3]):
-            # print get_rgb_from_cloud_field(d[3])
-            # insert another conditional here only if desired color is matched 
-            # for now seeing red is enough 
-            # print get_rgb_from_cloud_field(d[3])
             rgb_data = get_rgb_from_cloud_field(d[3])
+            # EXTRACT RGB
             r = float(rgb_data[0])
             g = float(rgb_data[1])
             b = float(rgb_data[2])
             
-            #if check_red_hsv(*colorsys.rgb_to_hsv(r,g,b)):
-            #    #print "RED"
-            #    red_cnt += 1
-            # print r,g,b
+            # Check matched colors
             if check_red_rgb(r,g,b):
                 red_cnt +=1
             if check_green_rgb(r,g,b):
@@ -188,11 +191,12 @@ def camera_depth_registered_callback(data):
             if check_yellow_rgb(r,g,b):
                 yellow_cnt +=1
         else:
-            nan_count += 1
+            nan_count += 1 # if NaN increase nan count
     print "Red_count",red_cnt,"Total count", total_count, "NaN count",nan_count ,red_cnt/(total_count-float(nan_count)+1)
     print "Green_count",green_cnt,"Total count", total_count, "NaN count",nan_count ,green_cnt/(total_count-float(nan_count)+1)
     print "Blue_count",blue_cnt,"Total count", total_count, "NaN count",nan_count ,blue_cnt/(total_count-float(nan_count)+1)
     print "Yellow_count",yellow_cnt,"Total count", total_count, "NaN count",nan_count ,yellow_cnt/(total_count-float(nan_count)+1)
+    # create a sphere marker and assign its properties
     marker=Marker()
     marker.header.frame_id="odom"
     marker.id=marker_cntr
@@ -204,11 +208,11 @@ def camera_depth_registered_callback(data):
     marker.scale.y=0.2
     marker.scale.z=0.2
     marker.color.a=1.0
-    pos = [translation[0], translation[1]]
+    pos = [translation[0], translation[1]] # get current position
     print pos
     marker.action = Marker.ADD
-    detected_color = None
-    if red_cnt/(total_count-float(nan_count)+1) >0.05:
+    detected_color = None # detected color variable
+    if red_cnt/(total_count-float(nan_count)+1) >0.05: # check against threshold
         print "Red Detected"
         detected_color = 'red'
         marker.color.r=1.0
@@ -236,6 +240,7 @@ def camera_depth_registered_callback(data):
         marker.color.g=1.0
         marker.color.b=0.0
         marker_array.markers.append(marker)
+    # publish marker
     marker_publisher.publish(marker_array)
     if detected_color: # left right logic
         # fails if a single color is not detected on the left side :/
@@ -243,15 +248,16 @@ def camera_depth_registered_callback(data):
         no_colors = get_current_no_colors()
         if no_colors == 4:
             if dumb_cache:
-                if dumb_cache != detected_color:
+                if dumb_cache != detected_color: # check if a new color is detected at the left-right turn
                     direction = 'right'
             else:
                 dumb_cache = detected_color
         print "No of colors: ", no_colors
-        marker_dict[direction][detected_color].append(pos)
+        marker_dict[direction][detected_color].append(pos) # update marker_dict with detected color
 
 def lap_callback(msg):
-    print msg.data
+    """ Check in which lap the robot is currently in """
+    print msg.data # Int32 message
     global start
     global action_client
     if msg.data == 1 and not start:
@@ -261,24 +267,24 @@ def lap_callback(msg):
         global detector
         detector = rospy.Subscriber("camera/depth_registered/points", PointCloud2, camera_depth_registered_callback, queue_size = 10000000)
         # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
-    elif msg.data == 2:
-        detector.unregister()
+        # create detector for points
+    elif msg.data == 2: 
+        detector.unregister() # destroy detector 
         start = False
         dirs = ['left', 'right']
         colors = ['red', 'green','blue','yellow']
+        perform calculation of cluster means
         for d in dirs:
             for c in colors:
                 marker_dict[d][c] = get_cluster_mean(marker_dict[d][c])
         from pprint import pprint
-        pprint(marker_dict)
-        ########################################################
-        # TEST EDILMESI LAZIM SAGLIKLI NOKTA BULUNMUS BIR MAPTE#
-        ########################################################
+        pprint(marker_dict) # print cluster means
         for c in colors:
             for d in dirs:        
                 goal = MoveBaseGoal()
                 goal.target_pose.header.frame_id = "base_link"
                 goal.target_pose.header.stamp = rospy.Time.now()
+                # go towards cluster means 
                 goal.target_pose.pose.position.x = marker_dict[d][c][0]
                 goal.target_pose.pose.position.y = marker_dict[d][c][1]
                 goal.target_pose.pose.orientation.w = 1.0
@@ -292,7 +298,6 @@ def lap_callback(msg):
                     state = action_client.get_state()
                     if state == GoalStatus.SUCCEEDED:
                         rospy.loginfo("Hooray, the base moved 3 meters forward")
-                # publish marker here maybe    
 
 def color_detection_node():
     global listener

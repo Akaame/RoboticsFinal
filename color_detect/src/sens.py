@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+#######################################################################
+# This code is not ours
+# This is the sensor_msgs library from original ROS packages
+# Original library defines a read_cloud method 
+# Which should be read_points. An unnecessary signature change creates
+# a regression fault. So we changed it back to read_points to make use of.
+########################################################################
+
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2008, Willow Garage, Inc.
