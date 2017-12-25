@@ -260,11 +260,11 @@ def lap_callback(msg):
     print msg.data # Int32 message
     global start
     global action_client
+    global detector
     if msg.data == 1 and not start:
         start = True
         # use depth_image_proc ros package to generate xyzrgb images
-        # subscribe to depth_registered/points
-        global detector
+        # subscribe to depth_registered/points   
         detector = rospy.Subscriber("camera/depth_registered/points", PointCloud2, camera_depth_registered_callback, queue_size = 10000000)
         # http://docs.ros.org/api/sensor_msgs/html/msg/PointCloud2.html
         # create detector for points
@@ -273,7 +273,7 @@ def lap_callback(msg):
         start = False
         dirs = ['left', 'right']
         colors = ['red', 'green','blue','yellow']
-        perform calculation of cluster means
+        # perform calculation of cluster means
         for d in dirs:
             for c in colors:
                 marker_dict[d][c] = get_cluster_mean(marker_dict[d][c])
@@ -292,12 +292,12 @@ def lap_callback(msg):
                 success = action_client.wait_for_result(rospy.Duration(60))
                 if not success:
                     action_client.cancel_goal()
-                    rospy.loginfo("The base failed to move forward 3 meters for some reason")
+                    rospy.loginfo("The base failed to move to area for some reason")
                 else:
                     # We made it!
                     state = action_client.get_state()
                     if state == GoalStatus.SUCCEEDED:
-                        rospy.loginfo("Hooray, the base moved 3 meters forward")
+                        rospy.loginfo("Hooray, the base moved to area")
 
 def color_detection_node():
     global listener
