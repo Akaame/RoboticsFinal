@@ -285,6 +285,9 @@ def lap_callback(msg):
                 goal.target_pose.header.frame_id = "base_link"
                 goal.target_pose.header.stamp = rospy.Time.now()
                 # go towards cluster means 
+                from math import isnan
+                if isnan(marker_dict[d][c]):
+                    continue
                 goal.target_pose.pose.position.x = marker_dict[d][c][0]
                 goal.target_pose.pose.position.y = marker_dict[d][c][1]
                 goal.target_pose.pose.orientation.w = 1.0
