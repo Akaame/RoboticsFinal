@@ -19,6 +19,8 @@ robot_base = tuple()
 lap = 2
 current_lap = 1
 status = None
+previous_dist = 1
+jump = False
 
 def map_callback(data):
     chatty_map = False
@@ -49,6 +51,8 @@ def laser_callback(data):
     global current_lap
     global publish_lap
     global status
+    global previous_dist
+    global jump
 
     (translation, orientation) = listener.lookupTransform("/odom", "/base_footprint", rospy.Time(0))
     if counter == 0:
@@ -64,46 +68,47 @@ def laser_callback(data):
                 print "Stop"
             counter = 1 
             current_lap += 1
-        print "Base: " + str(robot_base)
-        print "Now: " + str(robot_new)
-        print "Distance: " + str(distance)
     distances = data.ranges
     length = len(distances)
-    leftmost = distances[-1]
     rightmost = distances[0]
-    middle = distances[length/2]
+    angle_diff = data.angle_increment
+    
 
-    for val in distances[:(length/2)]:
-        if not isnan(val):
-            check = True
-            break
-        else:
-            check = False
-    print "wall on right:" + str(wall_on_right) + " check: " + str(check)
+
+    
+
+    print "Previous: " + str(previous_dist)
     print 'The distance to the rightmost scanned point is: ', data.ranges[0]
-    print 'The distance to the middle scanned point is: ', data.ranges[len(data.ranges)/2]
     print '-------------------------------------------------------------------------------'
 
-    if rightmost > 1.3:
+    if jump and rightmost > 1.3:
+        print "JUMPPPPPPPPPPPPPPPPPPPPPPPP continue"
+        motor_command.angular.z = -pi/10
+        motor_command.linear.x = 0.3
+    elif jump and rightmost > 1.0:
+        motor_command.angular.z = 0
+        motor_command.linear.x = 0.5
+        jump = False
+    elif jump and isnan(rightmost):
+        motor_command.angular.z = -pi/3
+        motor_command.linear.x = 0.3
+    elif rightmost / previous_dist > 4.5:
+        print "JUMPPPPPPPPPPPPPPPPPPPPPPPP"
+        motor_command.angular.z = -pi/60
+        motor_command.linear.x = 1
+        jump = True
+    elif rightmost > 1.3:
         motor_command.angular.z = -pi/3
         motor_command.linear.x = 0.2
     elif rightmost > 1.0:
         motor_command.angular.z = 0
         motor_command.linear.x = 0.5
-    elif wall_on_right == False and check == False:
-        motor_command.angular.z = -pi/3
-        motor_command.linear.x = 0.3
-    elif wall_on_right == False and check == True:
-        motor_command.angular.z = -pi/2
-        motor_command.linear.x = 0.3
-    elif wall_on_right == True and check == False:
-        motor_command.angular.z = pi/3
-        motor_command.linear.x = 0.3
+        jump = False
     else:
         motor_command.angular.z = pi/2
         motor_command.linear.x = 0
     
-    wall_on_right = check
+    previous_dist = rightmost
     counter += 1
     motor_command_publisher.publish(motor_command)
 
