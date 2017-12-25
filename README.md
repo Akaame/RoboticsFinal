@@ -27,3 +27,6 @@ source /opt/ros/kinetic/setup.bash
 source devel/setup.bash
 rosrun color_detect run.py
 ```
+### Youtube Demonstration Link:
+
+https://www.youtube.com/watch?v=Mb0u_G-cgIk&pbjreload=10
