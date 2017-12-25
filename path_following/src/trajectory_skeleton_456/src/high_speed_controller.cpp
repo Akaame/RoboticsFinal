@@ -7,6 +7,8 @@
 
 #define pi 3.141592
 
+//*** BELOW CODE TAKEN FROM BLG456 - ROBOTIC COURSE 2ND HOMEWORK ***//
+
 //contains waypoint data
 geometry_msgs::Transform waypoint;
 
@@ -91,20 +93,23 @@ int main(int argc, char **argv)
         double waypoint_theta=quat.getAngle()*waypoint_axis[2]; // only need the z axis
         std::cout<<"Current waypoint (theta): ("<<waypoint_theta<<")"<<std::endl<<std::endl;
 
+        //*** ABOVE CODE TAKEN FROM BLG456 - ROBOTIC COURSE 2ND HOMEWORK ***//
+
+        //*** BELOW CODE IS ADDED BY UFUK KURT (TEAM MEMBER OF GazeRo) ***//
 
         double X_motor;   // Robots motor command linear
         double Z_motor;   // Robots motor command angular
         double Kp = 0.5;  // Gain
-                
+
         double X_Looking_for = cos(robot_theta) * (waypoint.translation.x - robot_pose.getOrigin().x()) + sin(robot_theta) * (waypoint.translation.y - robot_pose.getOrigin().y());				// Translate x waypoints from world frame to robot frame.
         double Y_Looking_for = (sin(robot_theta) * (-1) * (waypoint.translation.x - robot_pose.getOrigin().x())) + cos(robot_theta) * (waypoint.translation.y - robot_pose.getOrigin().y());	// Translate y waypoints from world frame to robot frame.
-        
-        double distance = sqrt((X_Looking_for * X_Looking_for) + (Y_Looking_for * Y_Looking_for));  // Distance between from present point of robot to waypoint point of robot. 
-        
+
+        double distance = sqrt((X_Looking_for * X_Looking_for) + (Y_Looking_for * Y_Looking_for));  // Distance between from present point of robot to waypoint point of robot.
+
         X_motor = (Kp * distance);							// X_motor calculated with simple control law (differantial-drive pose control with goal-centered coordinates).
-        
+
         Z_motor = atan2(Y_Looking_for, X_Looking_for);		// Z_motor is equal to arctan of Y waypoint in robots frame / X waypoint in robots frame.
-        
+
         if(Z_motor > pi && Z_motor < (2 * pi)){
 															// We always want to handle the Z_motor in +-(0 to pi) range.
 			Z_motor = Z_motor - (2 * pi);
